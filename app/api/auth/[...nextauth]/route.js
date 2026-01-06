@@ -7,32 +7,26 @@ export const authOptions = {
     FacebookProvider({
       clientId: process.env.FACEBOOK_ID,
       clientSecret: process.env.FACEBOOK_SECRET,
+    }),
+
+    LinkedInProvider({
+      clientId: process.env.LINKEDIN_ID,
+      clientSecret: process.env.LINKEDIN_SECRET,
       authorization: {
         params: {
-          scope: "public_profile email",
+          scope: "r_liteprofile r_emailaddress",
         },
       },
     }),
-
-   LinkedInProvider({
-  clientId: process.env.LINKEDIN_ID,
-  clientSecret: process.env.LINKEDIN_SECRET,
-
-  issuer: "https://www.linkedin.com/oauth",
-
-  authorization: {
-    params: {
-      scope: "openid profile email",
-    },
-  },
-
-  idToken: true,
-  checks: ["pkce", "state"],
-}),
-
   ],
 
   secret: process.env.NEXTAUTH_SECRET,
+
+  session: {
+    strategy: "jwt",
+  },
+
+  debug: true, // 👈 prod logs ke liye
 };
 
 const handler = NextAuth(authOptions);
