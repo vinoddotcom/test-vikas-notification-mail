@@ -1,19 +1,51 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function SendEmail() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [emails, setEmails] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
-  const [status, setStatus] = useState("");
-  const [loading, setLoading] = useState(false); // ✅ NEW
+  const [statusMessage, setStatusMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // ❗ LOGIC SAME – ONLY UI STATE ADDED
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/api/auth/signin");
+    }
+  }, [status, router]);
+
+  // Show loading state while checking session
+  if (status === "loading") {
+    return (
+      <div style={styles.wrapper}>
+        <div style={styles.card}>
+          <p style={styles.loading}>⏳ Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!session) {
+    return (
+      <div style={styles.wrapper}>
+        <div style={styles.card}>
+          <p style={styles.loading}>🔒 Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
+
   const sendEmail = async () => {
     if (loading) return;
 
     setLoading(true);
-    setStatus("");
+    setStatusMessage("");
 
     try {
       const res = await fetch("/api/send-email", {
@@ -23,9 +55,15 @@ export default function SendEmail() {
       });
 
       const data = await res.json();
-      setStatus(data.message);
+
+      if (res.status === 401) {
+        router.push("/api/auth/signin");
+        return;
+      }
+
+      setStatusMessage(data.message);
     } catch (err) {
-      setStatus("❌ Failed to send email");
+      setStatusMessage("❌ Failed to send email");
     } finally {
       setLoading(false);
     }
@@ -35,6 +73,10 @@ export default function SendEmail() {
     <div style={styles.wrapper}>
       <div style={styles.card}>
         <h2 style={styles.title}>📧 Send Email</h2>
+
+        <p style={styles.userInfo}>
+          👤 Logged in as: <strong>{session.user?.name || session.user?.email}</strong>
+        </p>
 
         <input
           style={styles.input}
@@ -73,10 +115,10 @@ export default function SendEmail() {
         </button>
 
         {/* Status Message */}
-        {status && <p style={styles.status}>{status}</p>}
+        {statusMessage && <p style={styles.status}>{statusMessage}</p>}
 
         {/* Loading text */}
-        {loading && <p style={styles.loading}>⏳ Please wait...</p>}
+        {loading && <p style={styles.loadingText}>⏳ Please wait...</p>}
       </div>
     </div>
   );
@@ -99,7 +141,16 @@ const styles = {
   },
   title: {
     textAlign: "center",
+    marginBottom: "10px",
+  },
+  userInfo: {
+    textAlign: "center",
+    fontSize: "13px",
+    color: "#666",
     marginBottom: "20px",
+    padding: "8px",
+    background: "#f5f5f5",
+    borderRadius: "6px",
   },
   input: {
     width: "100%",
@@ -107,6 +158,7 @@ const styles = {
     marginBottom: "12px",
     borderRadius: "6px",
     border: "1px solid #ccc",
+    boxSizing: "border-box",
   },
   textarea: {
     width: "100%",
@@ -116,6 +168,7 @@ const styles = {
     borderRadius: "6px",
     border: "1px solid #ccc",
     resize: "none",
+    boxSizing: "border-box",
   },
   button: {
     width: "100%",
@@ -132,6 +185,11 @@ const styles = {
     fontWeight: 500,
   },
   loading: {
+    textAlign: "center",
+    fontSize: "16px",
+    color: "#667eea",
+  },
+  loadingText: {
     marginTop: "10px",
     textAlign: "center",
     fontSize: "13px",

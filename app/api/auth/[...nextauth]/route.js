@@ -31,6 +31,23 @@ export const authOptions = {
     strategy: "jwt",
   },
 
+
+  callbacks: {
+    // Redirect to home page after sign in
+    async redirect({ url, baseUrl }) {
+      // After sign out, redirect to home
+      if (url.includes("signout") || url.includes("logout")) {
+        return baseUrl;
+      }
+      // After sign in, redirect to home
+      if (url.startsWith(baseUrl)) {
+        return baseUrl;
+      }
+      // Default: redirect to home
+      return baseUrl;
+    },
+  },
+
   debug: true, // 👈 prod logs ke liye
 };
 

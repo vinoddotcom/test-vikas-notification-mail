@@ -1,18 +1,24 @@
-export const metadata = { title: "Email Notification App" };
+"use client";
+import { SessionProvider } from "next-auth/react";
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        <title>Email Notification App</title>
+      </head>
       <body style={styles.body}>
-        <header style={styles.header}>
-          <div style={styles.brand}>📧 Email Notification App</div>
-        </header>
+        <SessionProvider>
+          <header style={styles.header}>
+            <div style={styles.brand}>📧 Email Notification App</div>
+          </header>
 
-        <main style={styles.main}>{children}</main>
+          <main style={styles.main}>{children}</main>
 
-        <footer style={styles.footer}>
-          © {new Date().getFullYear()} Email Notification App
-        </footer>
+          <footer style={styles.footer}>
+            © {new Date().getFullYear()} Email Notification App
+          </footer>
+        </SessionProvider>
       </body>
     </html>
   );
